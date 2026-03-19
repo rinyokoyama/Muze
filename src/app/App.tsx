@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Music, Calendar, ExternalLink, Gift, ShoppingCart, Instagram, Youtube, ChevronDown, ChevronUp, Trophy } from 'lucide-react';
-import backgroundImage from '7B2E0317-917A-454B-99CA-637B7E409E80.jpg';
-import banquetCalendar from 'S__83353614_0.jpg';
-import banquetInfo from 'S__83353615_0.jpg';
-import banquetSerial from 'S__83353616_0.jpg';
+import backgroundImage from '../assets/7B2E0317-917A-454B-99CA-637B7E409E80.jpg';
+import banquetCalendar from '../assets/S__83353614_0.jpg';
+import banquetInfo from '../assets/S__83353615_0.jpg';
+import banquetSerial from '../assets/S__83353616_0.jpg';
 import { Button } from './components/ui/button';
 import { Checkbox } from './components/ui/checkbox';
 
