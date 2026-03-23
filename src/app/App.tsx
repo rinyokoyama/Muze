@@ -1,9 +1,6 @@
-import { useState, useEffect } from 'react';
-import { CheckCircle2, Circle, Music, Calendar, ExternalLink, Gift, ShoppingCart, Instagram, Youtube, ChevronDown, ChevronUp, Trophy } from 'lucide-react';
-import backgroundImage from '../assets/7B2E0317-917A-454B-99CA-637B7E409E80.jpg';
-import banquetCalendar from '../assets/S__83353614_0.jpg';
-import banquetInfo from '../assets/S__83353615_0.jpg';
-import banquetSerial from '../assets/S__83353616_0.jpg';
+import { useState, useEffect, useRef } from 'react';
+import { CheckCircle2, Circle, Music, Calendar, ExternalLink, Gift, ShoppingCart, Instagram, Youtube, ChevronDown, ChevronUp, Trophy, Video, Share2, Menu, X } from 'lucide-react';
+import backgroundImage from 'figma:asset/201ec8a744c7965c9c4ec55aa5afc1407deb78dd.png';
 import { Button } from './components/ui/button';
 import { Checkbox } from './components/ui/checkbox';
 
@@ -20,58 +17,34 @@ const services: ServiceLink[] = [
   { 
     name: 'iTunes', 
     icon: '🍎',
-    purchaseUrl: 'https://music.apple.com/jp/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/itunes',
+    purchaseUrl: 'https://music.apple.com/jp/album/get-up-and-dance/1882367769?i=1882367771', 
+    applicationUrl: 'https://form.universal-music.co.jp/dl_mazzel_guad/page/form.html',
     color: 'from-pink-200/40 to-rose-200/40',
     buttonColor: 'from-pink-400/80 to-rose-400/80'
   },
   { 
     name: 'レコチョク', 
     icon: '🎵',
-    purchaseUrl: 'https://recochoku.jp/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/recochoku',
+    purchaseUrl: 'https://recochoku.jp/song/S1030008029', 
+    applicationUrl: 'https://form.universal-music.co.jp/dl_mazzel_guad/page/form.html',
     color: 'from-orange-200/40 to-red-200/40',
     buttonColor: 'from-orange-400/80 to-red-400/80'
   },
   { 
-    name: 'うたギフト', 
-    icon: '🎁',
-    purchaseUrl: 'https://utagift.com/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/utagift',
-    color: 'from-yellow-200/40 to-orange-200/40',
-    buttonColor: 'from-yellow-400/80 to-orange-400/80'
-  },
-  { 
     name: 'mora', 
     icon: '🎧',
-    purchaseUrl: 'https://mora.jp/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/mora',
+    purchaseUrl: 'https://mora.jp/package/43000006/00199957565196/', 
+    applicationUrl: 'https://form.universal-music.co.jp/dl_mazzel_guad/page/form.html',
     color: 'from-blue-200/40 to-indigo-200/40',
     buttonColor: 'from-blue-400/80 to-indigo-400/80'
   },
   { 
     name: 'Amazon Music', 
     icon: '🛒',
-    purchaseUrl: 'https://music.amazon.co.jp/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/amazon',
+    purchaseUrl: 'https://www.amazon.co.jp/dp/B0GS545C63?tag=universmusicc-22&ie=UTF8&linkCode=as2&ascsubtag=f2422228ae95033e9b024fc326579956&ref=dmm_acq_soc_jp_u_lfire_lp_x_f2422228ae95033e9b024fc326579956', 
+    applicationUrl: 'https://form.universal-music.co.jp/dl_mazzel_guad/page/form.html',
     color: 'from-cyan-200/40 to-blue-200/40',
     buttonColor: 'from-cyan-400/80 to-blue-400/80'
-  },
-  { 
-    name: 'mu-mo', 
-    icon: '🎶',
-    purchaseUrl: 'https://mu-mo.net/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/mumo',
-    color: 'from-purple-200/40 to-pink-200/40',
-    buttonColor: 'from-purple-400/80 to-pink-400/80'
-  },
-  { 
-    name: 'dミュージック', 
-    icon: '📱',
-    purchaseUrl: 'https://music.dmkt-sp.jp/', 
-    applicationUrl: 'https://embed-sync-13941919.figma.site/dmusic',
-    color: 'from-red-200/40 to-pink-200/40',
-    buttonColor: 'from-red-400/80 to-pink-400/80'
   },
 ];
 
@@ -82,32 +55,72 @@ interface PurchaseChecklist {
   };
 }
 
+interface CampaignChecklist {
+  downloadSteps: { [key: string]: boolean };
+  videoSteps: { [key: string]: boolean };
+  spotifyMembers: { [key: string]: boolean };
+  spotifySteps: { [key: string]: boolean };
+  chartAchievements: { [key: string]: boolean };
+}
+
 export default function App() {
   const [purchaseChecklist, setPurchaseChecklist] = useState<PurchaseChecklist>(() => {
     const saved = localStorage.getItem("mazzel-purchase-checklist");
     return saved ? JSON.parse(saved) : {};
   });
 
-  const [openScheduleDates, setOpenScheduleDates] = useState<{ [key: string]: boolean }>({
-    '3/23': true // デフォルトで最初の日付を開く
+  const [campaignChecklist, setCampaignChecklist] = useState<CampaignChecklist>(() => {
+    const saved = localStorage.getItem("mazzel-campaign-checklist");
+    const defaultChecklist = {
+      downloadSteps: {},
+      videoSteps: {},
+      spotifyMembers: {},
+      spotifySteps: {},
+      chartAchievements: {}
+    };
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Ensure chartAchievements exists for backward compatibility
+      return {
+        ...defaultChecklist,
+        ...parsed,
+        chartAchievements: parsed.chartAchievements || {}
+      };
+    }
+    return defaultChecklist;
   });
 
-  const [openSupportSections, setOpenSupportSections] = useState<{ [key: string]: boolean }>({
-    'info': true,
-    'dl': false,
-    'st': false,
-    'mv': false,
-    'other': false
+  const [openScheduleDates, setOpenScheduleDates] = useState<{ [key: string]: boolean }>(() => {
+    const today = new Date();
+    const month = today.getMonth() + 1;
+    const day = today.getDate();
+    const todayKey = `${month}/${day}`;
+    return { [todayKey]: true };
   });
 
-  const [openDownloadCampaign, setOpenDownloadCampaign] = useState(true);
-  const [openImportantPoints, setOpenImportantPoints] = useState(true);
-  const [openBanquetInfo, setOpenBanquetInfo] = useState(false);
+  const [openDownloadCampaign, setOpenDownloadCampaign] = useState(false);
   const [openChartHistory, setOpenChartHistory] = useState(true);
+  const [openVideoCampaign, setOpenVideoCampaign] = useState(false);
+  const [openSpotifyCampaign, setOpenSpotifyCampaign] = useState(false);
+  const [openDigitalCampaign, setOpenDigitalCampaign] = useState(true);
+  const [openSchedule, setOpenSchedule] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const chartRef = useRef<HTMLDivElement>(null);
+  const campaignRef = useRef<HTMLDivElement>(null);
+  const scheduleRef = useRef<HTMLDivElement>(null);
+  const downloadCampaignRef = useRef<HTMLDivElement>(null);
+  const videoCampaignRef = useRef<HTMLDivElement>(null);
+  const spotifyCampaignRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     localStorage.setItem("mazzel-purchase-checklist", JSON.stringify(purchaseChecklist));
   }, [purchaseChecklist]);
+
+  useEffect(() => {
+    localStorage.setItem("mazzel-campaign-checklist", JSON.stringify(campaignChecklist));
+  }, [campaignChecklist]);
 
   const togglePurchase = (serviceName: string) => {
     setPurchaseChecklist(prev => ({
@@ -129,22 +142,60 @@ export default function App() {
     }));
   };
 
-  const totalTasks = services.length * 2;
-  const completedTasks = Object.values(purchaseChecklist).reduce((acc, curr) => {
-    return acc + (curr.purchased ? 1 : 0) + (curr.campaigned ? 1 : 0);
-  }, 0);
+  const toggleVideoStep = (step: string) => {
+    setCampaignChecklist(prev => ({
+      ...prev,
+      videoSteps: {
+        ...prev.videoSteps,
+        [step]: !prev.videoSteps[step]
+      }
+    }));
+  };
+
+  const toggleDownloadStep = (step: string) => {
+    setCampaignChecklist(prev => ({
+      ...prev,
+      downloadSteps: {
+        ...prev.downloadSteps,
+        [step]: !prev.downloadSteps[step]
+      }
+    }));
+  };
+
+  const toggleChartAchievement = (chart: string) => {
+    setCampaignChecklist(prev => ({
+      ...prev,
+      chartAchievements: {
+        ...prev.chartAchievements,
+        [chart]: !prev.chartAchievements[chart]
+      }
+    }));
+  };
+
+  const toggleSpotifyMember = (member: string) => {
+    setCampaignChecklist(prev => ({
+      ...prev,
+      spotifyMembers: {
+        ...prev.spotifyMembers,
+        [member]: !prev.spotifyMembers[member]
+      }
+    }));
+  };
+
+  const toggleSpotifyStep = (step: string) => {
+    setCampaignChecklist(prev => ({
+      ...prev,
+      spotifySteps: {
+        ...prev.spotifySteps,
+        [step]: !prev.spotifySteps[step]
+      }
+    }));
+  };
 
   const toggleScheduleDate = (date: string) => {
     setOpenScheduleDates(prev => ({
       ...prev,
       [date]: !prev[date]
-    }));
-  };
-
-  const toggleSupportSection = (section: string) => {
-    setOpenSupportSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
     }));
   };
 
@@ -182,11 +233,11 @@ export default function App() {
         },
         {
           time: '20:30',
-          title: 'YouTube Live'
+          title: "「Get Up And Dance」Music Video公開直前 -YouTube Live-"
         },
         {
           time: '21:00',
-          title: 'Music Video YouTube Premiere'
+          title: '「Get Up And Dance」Music Video プレミア公開'
         },
         {
           category: 'MAGAZINE',
@@ -202,11 +253,16 @@ export default function App() {
     },
     {
       date: '3/24',
-      dayOfWeek: 'Thu',
+      dayOfWeek: 'Tue',
       events: [
         {
-          time: '19:30',
-          title: 'Stationhead'
+          time: '19:30 - 20:00',
+          title: 'Stationhead Listening Party'
+        },
+        {
+          time: '24:15 - 24:44',
+          category: 'TV',
+          title: 'NHKBS「The Covers」(再編集版) - KAIRYU'
         }
       ]
     },
@@ -215,8 +271,8 @@ export default function App() {
       dayOfWeek: 'Wed',
       events: [
         {
-          time: '19:30',
-          title: 'Stationhead'
+          time: '19:30 - 20:00',
+          title: 'Stationhead Listening Party'
         }
       ]
     },
@@ -225,8 +281,24 @@ export default function App() {
       dayOfWeek: 'Thu',
       events: [
         {
-          time: '19:30',
-          title: 'Stationhead'
+          time: '19:30 - 20:00',
+          title: 'Stationhead Listening Party'
+        }
+      ]
+    },
+    {
+      date: '3/27',
+      dayOfWeek: 'Fri',
+      events: [
+        {
+          time: '24:35 - 25:05',
+          category: 'TV',
+          title: '読売テレビ「音道楽♪」 - KAIRYU・RAN'
+        },
+        {
+          time: '24:59 - 25:59',
+          category: 'TV',
+          title: '日本テレビ「バズリズム02」'
         }
       ]
     },
@@ -234,6 +306,11 @@ export default function App() {
       date: '3/28',
       dayOfWeek: 'Sat',
       events: [
+        {
+          time: '9:30 - 14:00',
+          category: 'TV',
+          title: 'TBS「王様のブランチ」 - KAIRYU・NAOYA'
+        },
         {
           time: '22:00 - 23:30',
           category: 'RADIO',
@@ -254,7 +331,7 @@ export default function App() {
     },
     {
       date: '3/31',
-      dayOfWeek: 'Thu',
+      dayOfWeek: 'Tue',
       events: [
         {
           time: '19:10 - 21:35',
@@ -265,6 +342,32 @@ export default function App() {
     }
   ];
 
+  const getDayColor = (dayOfWeek: string) => {
+    const colorMap: { [key: string]: string } = {
+      'Sun': 'bg-red-500',
+      'Mon': 'bg-orange-500',
+      'Tue': 'bg-yellow-500',
+      'Wed': 'bg-green-500',
+      'Thu': 'bg-blue-500',
+      'Fri': 'bg-purple-500',
+      'Sat': 'bg-pink-500'
+    };
+    return colorMap[dayOfWeek] || 'bg-orange-500';
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colorMap: { [key: string]: string } = {
+      'TV': 'bg-red-600',
+      'RADIO': 'bg-purple-600',
+      'MAGAZINE': 'bg-teal-600'
+    };
+    return colorMap[category] || 'bg-rose-600'
+  };
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
     <div className="min-h-screen py-8 px-4 relative">
       {/* Background Image with slight blur */}
@@ -273,19 +376,223 @@ export default function App() {
         style={{
           backgroundImage: `url(${backgroundImage})`,
           filter: 'blur(2px)',
-          transform: 'scale(1.05)' // Prevent white edges from blur
+          transform: 'scale(1.05)'
         }}
       />
       
       {/* Overlay for better readability */}
       <div className="fixed inset-0 bg-black/20"></div>
+
+      {/* Floating Menu Button */}
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="fixed top-4 right-4 z-50 bg-white/20 backdrop-blur-md hover:bg-white/30 p-3 rounded-full shadow-lg border border-white/30 transition-all"
+        aria-label="Menu"
+      >
+        {menuOpen ? <X className="w-6 h-6 text-white" /> : <Menu className="w-6 h-6 text-white" />}
+      </button>
+
+      {/* Menu Overlay */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 backdrop-blur-sm"
+          onClick={() => setMenuOpen(false)}
+        >
+          <div
+            className="fixed top-20 right-4 bg-white/90 backdrop-blur-md rounded-xl shadow-2xl border border-white/50 p-4 w-64 z-50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-gray-900 font-bold mb-3 text-lg">メニュー</h3>
+            <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+              {/* トップに戻る */}
+              <button
+                onClick={() => {
+                  scrollToSection(headerRef);
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 p-3 rounded-lg hover:bg-white/60 transition-colors text-left"
+              >
+                <Music className="w-5 h-5 text-purple-600" />
+                <span className="text-gray-900 font-medium">トップに戻る</span>
+              </button>
+
+              {/* Divider */}
+              <div className="border-t border-gray-300 my-2"></div>
+
+              {/* CHART */}
+              <button
+                onClick={() => {
+                  scrollToSection(chartRef);
+                  setOpenChartHistory(true);
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 p-3 rounded-lg hover:bg-white/60 transition-colors text-left"
+              >
+                <Trophy className="w-5 h-5 text-orange-600" />
+                <span className="text-gray-900 font-medium">CHART</span>
+              </button>
+
+              {/* デジタルキャンペーン - メインカテゴリ */}
+              <div className="pl-0">
+                <button
+                  onClick={() => {
+                    scrollToSection(campaignRef);
+                    setOpenDigitalCampaign(true);
+                    setMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2 p-3 rounded-lg hover:bg-white/60 transition-colors text-left"
+                >
+                  <Gift className="w-5 h-5 text-pink-600" />
+                  <span className="text-gray-900 font-medium">デジタルキャンペーン</span>
+                </button>
+                
+                {/* サブメニュー */}
+                <div className="pl-8 mt-1 space-y-1">
+                  <button
+                    onClick={() => {
+                      scrollToSection(campaignRef);
+                      setOpenDigitalCampaign(true);
+                      setOpenDownloadCampaign(true);
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <ShoppingCart className="w-4 h-4 text-pink-500" />
+                    <span className="text-gray-800 text-sm">ダウンロード</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      scrollToSection(campaignRef);
+                      setOpenDigitalCampaign(true);
+                      setOpenVideoCampaign(true);
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <Video className="w-4 h-4 text-red-500" />
+                    <span className="text-gray-800 text-sm">動画投稿</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      scrollToSection(campaignRef);
+                      setOpenDigitalCampaign(true);
+                      setOpenSpotifyCampaign(true);
+                      setMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <Share2 className="w-4 h-4 text-green-500" />
+                    <span className="text-gray-800 text-sm">Spotify Canvas</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* スケジュール */}
+              <button
+                onClick={() => {
+                  scrollToSection(scheduleRef);
+                  setOpenSchedule(true);
+                  setMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-2 p-3 rounded-lg hover:bg-white/60 transition-colors text-left"
+              >
+                <Calendar className="w-5 h-5 text-blue-600" />
+                <span className="text-gray-900 font-medium">スケジュール</span>
+              </button>
+
+              {/* Divider */}
+              <div className="border-t border-gray-300 my-2"></div>
+
+              {/* SNSリンク */}
+              <div className="pt-2">
+                <p className="text-gray-700 font-semibold text-xs mb-2 px-3">公式SNS</p>
+                <div className="space-y-1">
+                  <a
+                    href="https://twitter.com/mazzel_official"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-gray-700">
+                        <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"/>
+                      </svg>
+                    </div>
+                    <span className="text-gray-800 text-sm">X (Twitter)</span>
+                  </a>
+                  <a
+                    href="https://www.instagram.com/mazzel_official/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <Instagram className="w-4 h-4 text-gray-700" />
+                    <span className="text-gray-800 text-sm">Instagram</span>
+                  </a>
+                  <a
+                    href="https://www.youtube.com/@MAZZEL_official"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <Youtube className="w-4 h-4 text-gray-700" />
+                    <span className="text-gray-800 text-sm">YouTube</span>
+                  </a>
+                  <a
+                    href="https://www.tiktok.com/@mazzelofficial"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-gray-700">
+                        <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                      </svg>
+                    </div>
+                    <span className="text-gray-800 text-sm">TikTok</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* ストリーミングリンク */}
+              <div className="pt-2">
+                <p className="text-gray-700 font-semibold text-xs mb-2 px-3">ストリーミング</p>
+                <div className="space-y-1">
+                  <a
+                    href="https://mazzel.lnk.to/GUAD?fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnnP0lYKHgmLR2JFJYGb3waftlekwJsj9m0ioh9M38GtGDKSBcsfgk5DlsYJs_aem_woAGUuoaqF1z43zSScTVfQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <Music className="w-4 h-4 text-gray-700" />
+                    <span className="text-gray-800 text-sm">全サービス</span>
+                  </a>
+                  <a
+                    href="https://open.spotify.com/album/75zcHOYgdJAQvUpR2ySLQG"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-white/60 transition-colors text-left"
+                  >
+                    <div className="w-4 h-4 flex items-center justify-center">
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-green-600">
+                        <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                      </svg>
+                    </div>
+                    <span className="text-gray-800 text-sm">Spotify</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div ref={headerRef} className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur text-white px-4 py-2 rounded-full mb-6 shadow-lg text-sm md:text-base border border-white/30">
             <Music className="w-4 h-4 md:w-5 md:h-5" />
-            <span>MUZE 非公式サポートサイト</span>
+            <span>非公式サイト</span>
           </div>
           
           <div className="mb-6">
@@ -344,11 +651,20 @@ export default function App() {
                 <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z\"/>
               </svg>
             </a>
+            <a
+              href="https://mazzel.lnk.to/GUAD?fbclid=PAZXh0bgNhZW0CMTEAc3J0YwZhcHBfaWQMMjU2MjgxMDQwNTU4AAGnnP0lYKHgmLR2JFJYGb3waftlekwJsj9m0ioh9M38GtGDKSBcsfgk5DlsYJs_aem_woAGUuoaqF1z43zSScTVfQ"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-white/20 backdrop-blur-sm hover:bg-white/30 p-3 rounded-full transition-all shadow-lg border border-white/30"
+              aria-label="Streaming"
+            >
+              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
+            </a>
           </div>
         </div>
 
         {/* Chart Section */}
-        <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
+        <div ref={chartRef} className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
           <button
             onClick={() => setOpenChartHistory(!openChartHistory)}
             className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
@@ -367,616 +683,702 @@ export default function App() {
             <>
               <div className="space-y-3">
                 {/* mora */}
-                <div className="bg-gradient-to-r from-amber-300/60 to-yellow-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['mora'] 
+                    ? 'bg-gradient-to-r from-amber-300/60 to-yellow-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
                   <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['mora'] || false}
+                      onCheckedChange={() => toggleChartAchievement('mora')}
+                      className="mt-1"
+                    />
                     <div className="text-3xl md:text-4xl">👑</div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-bold text-sm md:text-base mb-1">mora</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">都道府県別DLランキング 全国制覇目標</p>
-                      <p className="text-gray-800 text-xs md:text-sm">47都道府県すべてで1位を目指す</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">都道府県別DLランキング 全国制覇</p>
                     </div>
                   </div>
                 </div>
 
                 {/* YouTube */}
-                <div className="bg-gradient-to-r from-red-300/60 to-pink-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['youtube'] 
+                    ? 'bg-gradient-to-r from-red-300/60 to-pink-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
                   <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['youtube'] || false}
+                      onCheckedChange={() => toggleChartAchievement('youtube')}
+                      className="mt-1"
+                    />
                     <div className="text-3xl md:text-4xl">🔥</div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-bold text-sm md:text-base mb-1">YouTube</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">急上昇 音楽ランキング 1位目標</p>
-                      <p className="text-gray-800 text-xs md:text-sm">Music Video 公開後に急上昇を狙う</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* LINE MUSIC */}
-                <div className="bg-gradient-to-r from-green-300/60 to-emerald-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
-                  <div className="flex items-start gap-3">
-                    <div className="text-3xl md:text-4xl">🎵</div>
-                    <div className="flex-1">
-                      <p className="text-gray-900 font-bold text-sm md:text-base mb-1">LINE MUSIC</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">デイリーランキング 1位目標</p>
-                      <p className="text-gray-800 text-xs md:text-sm">日替わり手書きメッセージキャンペーン参加</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">急上昇 音楽ランキング</p>
                     </div>
                   </div>
                 </div>
 
                 {/* USEN */}
-                <div className="bg-gradient-to-r from-purple-300/60 to-pink-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['usen'] 
+                    ? 'bg-gradient-to-r from-purple-300/60 to-pink-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
                   <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['usen'] || false}
+                      onCheckedChange={() => toggleChartAchievement('usen')}
+                      className="mt-1"
+                    />
                     <div className="text-3xl md:text-4xl">🎤</div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-bold text-sm md:text-base mb-1">USEN 推しリク</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">デイリーランキング 1位目標</p>
-                      <p className="text-gray-800 text-xs md:text-sm">推し活リクエスト集計・デイリー1位を目指す</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">デイリーランキング</p>
                     </div>
                   </div>
                 </div>
 
-                {/* Billboard JAPAN HOT100 */}
-                <div className="bg-gradient-to-r from-blue-300/60 to-cyan-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
+                {/* LINE MUSIC */}
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['linemusic'] 
+                    ? 'bg-gradient-to-r from-green-300/60 to-emerald-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
                   <div className="flex items-start gap-3">
-                    <div className="text-3xl md:text-4xl">📊</div>
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['linemusic'] || false}
+                      onCheckedChange={() => toggleChartAchievement('linemusic')}
+                      className="mt-1"
+                    />
+                    <div className="text-3xl md:text-4xl">🎵</div>
                     <div className="flex-1">
-                      <p className="text-gray-900 font-bold text-sm md:text-base mb-1">Billboard JAPAN HOT100</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">上位ランクイン目標</p>
-                      <p className="text-gray-800 text-xs md:text-sm">毎週水曜更新・初週が重要</p>
+                      <p className="text-gray-900 font-bold text-sm md:text-base mb-1">LINE MUSIC</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">デイリーランキング</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Oricon */}
-                <div className="bg-gradient-to-r from-orange-300/60 to-yellow-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm">
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['oricon'] 
+                    ? 'bg-gradient-to-r from-orange-300/60 to-yellow-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
                   <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['oricon'] || false}
+                      onCheckedChange={() => toggleChartAchievement('oricon')}
+                      className="mt-1"
+                    />
                     <div className="text-3xl md:text-4xl">📊</div>
                     <div className="flex-1">
                       <p className="text-gray-900 font-bold text-sm md:text-base mb-1">オリコン</p>
-                      <p className="text-gray-900 font-semibold text-xs md:text-sm mb-1">週間デジタルシングル 上位目標</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">週間デジタルシングル</p>
                       <p className="text-gray-800 text-xs md:text-sm">毎週水曜発表・DL集計</p>
                     </div>
                   </div>
                 </div>
+
+                {/* Billboard JAPAN HOT100 */}
+                <div className={`backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm transition-all ${
+                  campaignChecklist.chartAchievements?.['billboard'] 
+                    ? 'bg-gradient-to-r from-blue-300/60 to-cyan-300/60' 
+                    : 'bg-gradient-to-r from-gray-400/20 to-gray-500/20 opacity-50'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={campaignChecklist.chartAchievements?.['billboard'] || false}
+                      onCheckedChange={() => toggleChartAchievement('billboard')}
+                      className="mt-1"
+                    />
+                    <div className="text-3xl md:text-4xl">📈</div>
+                    <div className="flex-1">
+                      <p className="text-gray-900 font-bold text-sm md:text-base mb-1">Billboard JAPAN HOT100</p>
+                      <p className="text-gray-900 font-semibold text-xs md:text-sm">毎週水曜更新</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </>
           )}
         </div>
 
-        {/* Song Info & Support Methods Section */}
-        <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
-            <h2 className="text-white drop-shadow-lg text-lg md:text-xl">楽曲情報・応援方法</h2>
-          </div>
-
-          <div className="space-y-3">
-            {/* 楽曲情報 */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleSupportSection('info')}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🎧</span>
-                  <span className="text-white drop-shadow font-semibold text-sm md:text-base">楽曲情報</span>
-                </div>
-                {openSupportSections.info ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openSupportSections.info && (
-                <div className="p-3 md:p-4 pt-0">
-                  <div className="bg-gradient-to-r from-orange-300/60 to-pink-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <div className="space-y-2 text-gray-900 text-sm md:text-base">
-                      <p><strong>曲名：</strong>Get Up And Dance</p>
-                      <p><strong>アーティスト：</strong>MAZZEL</p>
-                      <p><strong>配信日：</strong>2026年3月23日</p>
-                      <p><strong>目的：</strong>Billboard Japan Hot 100 上位を目指すための応援方法まとめ</p>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-3 bg-gradient-to-r from-blue-300/60 to-cyan-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="text-gray-900 font-semibold mb-2 text-sm md:text-base">📊 集計期間</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>• 毎週 月曜〜日曜 23:59まで</p>
-                      <p>• <strong>初週：3/23（月）〜3/29（日）</strong></p>
-                      <p>• <strong className="text-red-600">先ヨミ（速報）対象：〜3/25（水）まで</strong></p>
-                    </div>
-                  </div>
-                </div>
-              )}
+        {/* Digital Campaign Section */}
+        <div ref={campaignRef} className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
+          <button
+            onClick={() => setOpenDigitalCampaign(!openDigitalCampaign)}
+            className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
+          >
+            <div className="flex items-center gap-2">
+              <Gift className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              <h2 className="text-white drop-shadow-lg text-lg md:text-xl">デジタルキャンペーン</h2>
             </div>
-
-            {/* DL（ダウンロード） */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleSupportSection('dl')}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">💾</span>
-                  <span className="text-white drop-shadow font-semibold text-sm md:text-base">① DL（ダウンロード）</span>
-                </div>
-                {openSupportSections.dl ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openSupportSections.dl && (
-                <div className="p-3 md:p-4 pt-0">
-                  <div className="bg-gradient-to-r from-pink-300/60 to-rose-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <div className="space-y-2 text-gray-900 text-sm md:text-base">
-                      <p className="font-semibold text-base md:text-lg mb-2">"単曲"で購入ダウンロード</p>
-                      <p className="flex items-center gap-2">
-                        <span className="text-xl">🌸</span>
-                        <span><strong className="text-red-600">できるだけ直後に！</strong></span>
+            {openDigitalCampaign ? 
+              <ChevronUp className="w-5 h-5 text-white/70" /> : 
+              <ChevronDown className="w-5 h-5 text-white/70" />
+            }
+          </button>
+          
+          {openDigitalCampaign && (
+            <div className="space-y-4">
+              {/* ①単曲ダウンロードキャンペーン */}
+              <div className="border-2 border-white/40 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenDownloadCampaign(!openDownloadCampaign)}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-white/10 backdrop-blur-sm hover:bg-white/15 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-5 h-5 text-white" />
+                    <h3 className="text-white drop-shadow font-semibold text-sm md:text-base">①単曲ダウンロードキャンペーン</h3>
+                  </div>
+                  {openDownloadCampaign ? 
+                    <ChevronUp className="w-5 h-5 text-white/70" /> : 
+                    <ChevronDown className="w-5 h-5 text-white/70" />
+                  }
+                </button>
+                
+                {openDownloadCampaign && (
+                  <div className="p-3 md:p-4 bg-white/5 backdrop-blur-sm">
+                    {/* Campaign Details */}
+                    <div className="mb-4 p-3 md:p-4 bg-blue-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">🎁 特典内容</p>
+                      <p className="text-black text-xs md:text-sm mb-2 font-semibold">
+                        各メンバーのソロアーティスト写真(アザーカット)
                       </p>
-                      <p className="flex items-center gap-2">
-                        <span className="text-xl">🌸</span>
-                        <span><strong className="text-red-600">できるだけ当日に！</strong></span>
+                      <p className="text-black text-xs font-semibold">※1回のご応募でメンバー全員分プレゼント</p>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-purple-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">📅 応募��間</p>
+                      <p className="text-black text-xs md:text-sm font-semibold">
+                        2026年3月23日(月) 12:00 ～ 3月30日(月) 18:00
                       </p>
-                      <div className="mt-3 pt-3 border-t border-gray-800/20">
-                        <p>• <strong>対象サービス：</strong>iTunes Store / Amazon Music / レコチョク / mora / mu-mo</p>
-                        <p className="flex items-start gap-2 mt-2">
-                          <span>🎁</span>
-                          <span><strong>ギフトも対象です</strong></span>
-                        </p>
-                      </div>
-                      <div className="mt-3 p-2 bg-white/40 rounded">
-                        <p className="text-red-600 font-bold">⚠️ アルバムのバンドル予約をする場合も、先に単曲購入をしましょう</p>
-                      </div>
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
 
-            {/* ST（ストリーミング） */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleSupportSection('st')}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">🎵</span>
-                  <span className="text-white drop-shadow font-semibold text-sm md:text-base">② ST（ストリーミング）</span>
-                </div>
-                {openSupportSections.st ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openSupportSections.st && (
-                <div className="p-3 md:p-4 pt-0 space-y-3">
-                  <div className="bg-gradient-to-r from-orange-300/60 to-yellow-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">たくさん聴きましょう♪</p>
-                    <div className="space-y-2 text-gray-900 text-sm md:text-base">
-                      <div className="p-2 bg-white/40 rounded">
-                        <p className="font-semibold">購入ダウンロードした曲は"削除"してから聴きましょう</p>
-                        <p className="text-sm mt-1">再生がカウントされない条件があります。</p>
-                      </div>
+                    <div className="mb-4 p-3 md:p-4 bg-green-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">📝 対象サービス</p>
+                      <p className="text-black text-xs md:text-sm font-semibold">
+                        iTunes / Amazon Music / レコチョク / mora
+                      </p>
                     </div>
-                  </div>
 
-                  <div className="bg-gradient-to-r from-purple-300/60 to-pink-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">対象サービス：</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>• Spotify Premium / Spotify Free</p>
-                      <p>• Apple Music</p>
-                      <p>• Amazon Music Unlimited</p>
-                      <p>• YouTube Music</p>
-                      <p>• Amazon Prime, LINE MUSIC, AWA</p>
-                      <p>• Rakuten Music, KKBOX</p>
+                    <div className="mb-4">
+                      <a 
+                        href="https://form.universal-music.co.jp/dl_mazzel_guad/page/form.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-gradient-to-r from-pink-500/80 to-purple-500/80 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg text-center shadow-lg"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Gift className="w-5 h-5" />
+                          <span>キャンペーン応募ページへ</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs mt-1 text-white/80">※3月23日(月)12時よりアクセス可能</p>
+                      </a>
                     </div>
-                  </div>
 
-                  <div className="bg-gradient-to-r from-cyan-300/60 to-blue-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">プレイリストを活用して聴きましょう</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>• 応援用プレイリストを優先にお使いください</p>
-                      <p>• サービスによりカウント条件などは異なります、事前にご確認ください</p>
-                      <p>• <strong>LINE MUSICは単曲再生OK</strong></p>
+                    <div className="space-y-3 md:space-y-4 mb-4">
+                      {services.map((service) => (
+                        <div 
+                          key={service.name}
+                          className={`border-2 border-white/30 rounded-lg p-3 md:p-4 hover:border-white/50 transition-colors bg-gradient-to-r ${service.color} bg-opacity-30 backdrop-blur-sm shadow-lg`}
+                        >
+                          <div className="flex items-start gap-2 md:gap-3">
+                            <span className="text-2xl md:text-3xl flex-shrink-0">{service.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="mb-2 md:mb-3 text-white drop-shadow font-semibold text-base md:text-lg">{service.name}</h4>
+                              
+                              <div className="space-y-2">
+                                {/* Purchase Link */}
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    checked={purchaseChecklist[service.name]?.purchased || false}
+                                    onCheckedChange={() => togglePurchase(service.name)}
+                                    id={`purchase-${service.name}`}
+                                    className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                                  />
+                                  <Button
+                                    className={`flex-1 bg-gradient-to-r ${service.buttonColor} hover:opacity-90 text-white text-sm md:text-base h-9 md:h-10`}
+                                    onClick={() => window.open(service.purchaseUrl, '_blank')}
+                                    disabled={service.purchaseUrl === '#'}
+                                  >
+                                    <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 flex-shrink-0" />
+                                    <span className="truncate">{service.purchaseUrl === '#' ? 'メンテナンス中' : '購入する'}</span>
+                                    {service.purchaseUrl !== '#' && <ExternalLink className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 flex-shrink-0" />}
+                                  </Button>
+                                </div>
+                                
+                                {/* Campaign Link */}
+                                <div className="flex items-center gap-2">
+                                  <Checkbox
+                                    checked={purchaseChecklist[service.name]?.campaigned || false}
+                                    onCheckedChange={() => toggleCampaign(service.name)}
+                                    id={`campaign-${service.name}`}
+                                    className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
+                                  />
+                                  <Button
+                                    variant="outline"
+                                    className="flex-1 border-white/50 bg-white/20 text-white hover:bg-white/30 text-sm md:text-base h-9 md:h-10 font-semibold"
+                                    onClick={() => window.open(service.applicationUrl, '_blank')}
+                                  >
+                                    <Gift className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 flex-shrink-0" />
+                                    <span className="truncate">キャンペーン応募</span>
+                                    <ExternalLink className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 flex-shrink-0" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-green-300/60 to-emerald-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">アーティストや楽曲へのいいね、着信音の設定など</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>登録・設定できるものは<strong className="text-red-600">すべて当日がおすすめ！</strong></p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-yellow-300/60 to-orange-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">🎶 応援用プレイリスト</p>
-                    <div className="space-y-2 text-gray-900 text-sm md:text-base">
-                      <p className="font-semibold">次の3曲ループ構成でプレイリストの作成・共有をお願いします</p>
-                      <div className="bg-white/50 rounded p-2 space-y-1">
-                        <p><strong>1曲目：</strong>BANQUET BANG</p>
-                        <p><strong>2曲目：</strong>Get Up And Dance (GUAD)</p>
-                        <p><strong>3曲目：</strong>MAZZELの楽曲 (BMSGアーティストの最新曲なども可)</p>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-gray-800/20">
-                        <p className="font-semibold mb-1">プレイリストの長さ：</p>
-                        <p>• Spotify：3時間以内</p>
-                        <p>• その他：1〜2時間程度</p>
-                      </div>
-                      <div className="mt-2 pt-2 border-t border-gray-800/20">
-                        <p className="font-semibold mb-1">共有・検索タグ：</p>
-                        <div className="flex flex-wrap gap-2">
-                          <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">#MUZE_Spolist</span>
-                          <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">#MUZE_Applelist</span>
-                          <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs">#MUZE_Amznlist</span>
+                    
+                    <div className="p-3 md:p-4 bg-orange-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-3 text-sm md:text-base">💡 応募方法</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.downloadSteps?.['step1'] || false}
+                            onCheckedChange={() => toggleDownloadStep('step1')}
+                            id="download-step1"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="download-step1" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            対象サービスで「Get Up And Dance」をダウンロード購入
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.downloadSteps?.['step2'] || false}
+                            onCheckedChange={() => toggleDownloadStep('step2')}
+                            id="download-step2"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="download-step2" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            購入画面（購入履歴）のスクリーンショットを撮影
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.downloadSteps?.['step3'] || false}
+                            onCheckedChange={() => toggleDownloadStep('step3')}
+                            id="download-step3"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="download-step3" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            応募サイトへスクリーンショットをアップロード
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.downloadSteps?.['step4'] || false}
+                            onCheckedChange={() => toggleDownloadStep('step4')}
+                            id="download-step4"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="download-step4" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            必要事項を記入してご応募
+                          </label>
                         </div>
                       </div>
-                      <div className="mt-2 p-2 bg-orange-400/50 rounded">
-                        <p className="font-semibold">共有されたプレイリストを優先に聴いていきましょう</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* ②ショート動画投稿キャンペーン */}
+              <div className="border-2 border-white/40 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenVideoCampaign(!openVideoCampaign)}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-white/10 backdrop-blur-sm hover:bg-white/15 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Video className="w-5 h-5 text-white" />
+                    <h3 className="text-white drop-shadow font-semibold text-sm md:text-base">②ショート動画投稿キャンペーン</h3>
+                  </div>
+                  {openVideoCampaign ? 
+                    <ChevronUp className="w-5 h-5 text-white/70" /> : 
+                    <ChevronDown className="w-5 h-5 text-white/70" />
+                  }
+                </button>
+                
+                {openVideoCampaign && (
+                  <div className="p-3 md:p-4 bg-white/5 backdrop-blur-sm">
+                    <div className="mb-4 p-3 md:p-4 bg-gradient-to-r from-pink-400/40 to-purple-400/40 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black text-xs md:text-sm leading-relaxed font-semibold">
+                        「Get Up And Dance」の公式音源を使用してTikTok、Instagram Reel、YouTube Shortsのいずれかで動画投稿いただいた方全員に「新生活応援手書きメッセージ画像」をプレゼント！
+                      </p>
+                      <p className="text-black text-xs mt-2 font-semibold">
+                        投稿いただく動画は「Get Up And Dance」にあわせて、ダンスはもちろん、オリジナル動画もOK！
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-blue-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black drop-shadow font-semibold mb-2 text-sm md:text-base">🎁 特典内容</p>
+                      <p className="text-black text-xs md:text-sm font-semibold">
+                        全員に「新生活応援手書きメッセージ画像」をプレゼント
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-purple-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black drop-shadow font-semibold mb-2 text-sm md:text-base">📅 応募期間</p>
+                      <p className="text-black text-xs md:text-sm font-semibold">
+                        2026年3月24日(火) 12:00 ～ 4月3日(金) 18:00
+                      </p>
+                    </div>
+
+                    <div className="mb-4">
+                      <a 
+                        href="https://form.universal-music.co.jp/sns_mazzel_guad_video/page/index.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-gradient-to-r from-pink-500/80 to-red-500/80 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg text-center shadow-lg"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Gift className="w-5 h-5" />
+                          <span>キャンペーン応募ページへ</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs mt-1 text-white/80">※3月24日(火)12時よりアクセス可能</p>
+                      </a>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-yellow-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black drop-shadow font-semibold mb-2 text-sm md:text-base">🎵 公式音源</p>
+                      <div className="space-y-2">
+                        <a 
+                          href="https://mazzel.lnk.to/GUAD_intro"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block bg-white/30 hover:bg-white/40 p-2 rounded text-black text-xs md:text-sm transition-colors font-medium"
+                        >
+                          MAZZEL「Get Up And Dance」 <ExternalLink className="w-3 h-3 inline ml-1" />
+                        </a>
+                        <a 
+                          href="https://vt.tiktok.com/ZS9R4fAaWTuyQ-Xkhoo/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block bg-white/30 hover:bg-white/40 p-2 rounded text-black text-xs md:text-sm transition-colors font-medium"
+                        >
+                          TikTok「Get Up And Dance」1サビ ver. <ExternalLink className="w-3 h-3 inline ml-1" />
+                        </a>
+                      </div>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-green-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black drop-shadow font-semibold mb-3 text-sm md:text-base">✅ 投稿の必須項目</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.videoSteps?.['requirement1'] || false}
+                            onCheckedChange={() => toggleVideoStep('requirement1')}
+                            id="video-requirement1"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="video-requirement1" className="text-black text-xs md:text-sm cursor-pointer">
+                            MAZZEL「Get Up And Dance」を音源として設定
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.videoSteps?.['requirement2'] || false}
+                            onCheckedChange={() => toggleVideoStep('requirement2')}
+                            id="video-requirement2"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="video-requirement2" className="text-black text-xs md:text-sm cursor-pointer">
+                            ハッシュタグ「#MAZZEL_GetUpAndDance」を付けて投稿
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-3 md:p-4 bg-orange-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black drop-shadow font-semibold mb-3 text-sm md:text-base">💡 応募方法</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.videoSteps['step1'] || false}
+                            onCheckedChange={() => toggleVideoStep('step1')}
+                            id="video-step1"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="video-step1" className="text-black text-xs md:text-sm cursor-pointer">
+                            STEP 1: 「Get Up And Dance」の音源を使用した動画を作成
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.videoSteps['step2'] || false}
+                            onCheckedChange={() => toggleVideoStep('step2')}
+                            id="video-step2"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="video-step2" className="text-black text-xs md:text-sm cursor-pointer">
+                            STEP 2: ハッシュタグ「#MAZZEL_GetUpAndDance」を付けて投稿
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.videoSteps['step3'] || false}
+                            onCheckedChange={() => toggleVideoStep('step3')}
+                            id="video-step3"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="video-step3" className="text-black text-xs md:text-sm cursor-pointer">
+                            STEP 3: 投稿のスクリーンショットをエントリーフォームからアップロード
+                          </label>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-
-            {/* MV（YouTube） */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleSupportSection('mv')}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">📺</span>
-                  <span className="text-white drop-shadow font-semibold text-sm md:text-base">③ MV（YouTube）</span>
-                </div>
-                {openSupportSections.mv ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openSupportSections.mv && (
-                <div className="p-3 md:p-4 pt-0 space-y-3">
-                  <div className="bg-gradient-to-r from-orange-300/60 to-yellow-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">Music Videoを楽しもう！</p>
-                    <div className="space-y-2 text-gray-900 text-sm md:text-base">
-                      <p className="font-semibold">Premiumも無料会員も</p>
-                      <p><strong className="text-red-600">YouTubeにログインをしましょう</strong></p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-red-300/60 to-pink-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">視聴方法</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>• 検索・登録チャンネルから</p>
-                      <p>• <strong>1〜3曲の動画を挟んで視聴</strong></p>
-                      <p>• <strong>広告は30秒は見ましょう</strong></p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-orange-400/70 to-red-400/70 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-red-500/50">
-                    <p className="font-semibold mb-2 text-white drop-shadow text-sm md:text-base">NG行動 ❌</p>
-                    <div className="space-y-1 text-white drop-shadow text-sm md:text-base">
-                      <p>• ミュート</p>
-                      <p>• 連続自動再生</p>
-                      <p>• 巻き戻し再生</p>
-                      <p>• もう一度見る</p>
-                      <p>• リロード</p>
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-r from-blue-300/60 to-cyan-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <p className="font-semibold mb-2 text-gray-900 text-sm md:text-base">集計締め日</p>
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p><strong className="text-red-600">プレミア公開から〜3/29（日）</strong> 初週集計締め日</p>
-                      <p className="text-sm mt-1">以降、毎週日曜日が集計締</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* その他（加点要素） */}
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleSupportSection('other')}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">✨</span>
-                  <span className="text-white drop-shadow font-semibold text-sm md:text-base">④ その他（加点要素）</span>
-                </div>
-                {openSupportSections.other ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openSupportSections.other && (
-                <div className="p-3 md:p-4 pt-0">
-                  <div className="bg-gradient-to-r from-green-300/60 to-emerald-300/60 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                    <div className="space-y-1 text-gray-900 text-sm md:text-base">
-                      <p>• SNSでシェア・拡散</p>
-                      <p>• ハッシュタグ：<strong>#MAZZEL_GetUpAndDance</strong></p>
-                      <p>• ラジオリクエスト</p>
-                      <p>• 歌詞サイト閲覧（Geniusなど）</p>
-                      <p>• USENリクエスト</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 重要ポイントまとめ */}
-          <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-            <button
-              onClick={() => setOpenImportantPoints(!openImportantPoints)}
-              className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">🧠</span>
-                <span className="text-white drop-shadow font-semibold text-sm md:text-base">重要ポイントまとめ</span>
+                )}
               </div>
-              {openImportantPoints ? 
-                <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                <ChevronDown className="w-5 h-5 text-white/70" />
-              }
-            </button>
-            
-            {openImportantPoints && (
-              <div className="p-3 md:p-4 pt-0">
-                <div className="bg-gradient-to-r from-orange-500/30 to-red-500/30 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-orange-400/50">
-                  <ul className="text-white drop-shadow text-xs md:text-sm space-y-1">
-                    <li>• <strong>初週（特に最初の3日）が超重要</strong></li>
-                    <li>• DL・ST・MVをバランスよくやる</li>
-                    <li>• "正しい再生方法"を守らないとカウントされない</li>
-                  </ul>
-                </div>
+
+              {/* ③Spotify Canvasシェアキャンペーン */}
+              <div className="border-2 border-white/40 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenSpotifyCampaign(!openSpotifyCampaign)}
+                  className="w-full flex items-center justify-between p-3 md:p-4 bg-white/10 backdrop-blur-sm hover:bg-white/15 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Share2 className="w-5 h-5 text-white" />
+                    <h3 className="text-white drop-shadow font-semibold text-sm md:text-base">③Spotify Canvasシェアキャンペーン</h3>
+                  </div>
+                  {openSpotifyCampaign ? 
+                    <ChevronUp className="w-5 h-5 text-white/70" /> : 
+                    <ChevronDown className="w-5 h-5 text-white/70" />
+                  }
+                </button>
+                
+                {openSpotifyCampaign && (
+                  <div className="p-3 md:p-4 bg-white/5 backdrop-blur-sm">
+                    <div className="mb-4 p-3 md:p-4 bg-gradient-to-r from-green-400/40 to-blue-400/40 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-black text-xs md:text-sm leading-relaxed font-semibold">
+                        3/24(火)17:00以降Spotifyにて「Get Up And Dance」を再生し、ご自身のInstagramもしくはXにてメンバーソロCanvasをシェアいただいた方全員にメンバーソロスマホ待受画像をプレゼント！
+                      </p>
+                      <p className="text-black text-xs mt-2 font-semibold">
+                        各メンバー1回ずつ・合計8回エントリーが可能！
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-blue-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">🎁 特典内容</p>
+                      <p className="text-black text-xs md:text-sm font-semibold">
+                        メンバーソロスマホ待受画像
+                      </p>
+                      <p className="text-black text-xs mt-2 font-semibold">
+                        ※Spotify Canvasをシェアしたメンバーの待受画像がもらえる
+                      </p>
+                    </div>
+
+                    <div className="mb-4 p-3 md:p-4 bg-purple-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-3 text-sm md:text-base">📅 エントリースケジュール</p>
+                      <div className="space-y-2">
+                        {[
+                          { name: 'KAIRYU', date: '3/24(火) 17:00' },
+                          { name: 'NAOYA', date: '3/25(水) 17:00' },
+                          { name: 'RAN', date: '3/26(木) 17:00' },
+                          { name: 'SEITO', date: '3/27(金) 17:00' },
+                          { name: 'RYUKI', date: '3/28(土) 17:00' },
+                          { name: 'TAKUTO', date: '3/29(日) 17:00' },
+                          { name: 'HAYATO', date: '3/30(月) 17:00' },
+                          { name: 'EIKI', date: '3/31(火) 17:00' }
+                        ].map((member) => (
+                          <div key={member.name} className="flex items-center gap-2">
+                            <Checkbox
+                              checked={campaignChecklist.spotifyMembers[member.name] || false}
+                              onCheckedChange={() => toggleSpotifyMember(member.name)}
+                              id={`spotify-${member.name}`}
+                              className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                            />
+                            <label htmlFor={`spotify-${member.name}`} className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                              {member.name}: {member.date}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-gray-900 text-xs mt-3 font-semibold">
+                        応募締め切り: 2026年4月1日(水) 18:00
+                      </p>
+                    </div>
+
+                    <div className="mb-4">
+                      <a 
+                        href="https://form.universal-music.co.jp/sns_mazzel_guad/page/index.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-gradient-to-r from-green-500/80 to-blue-500/80 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg text-center shadow-lg"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Gift className="w-5 h-5" />
+                          <span>キャンペーン応募ページへ</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                        <p className="text-xs mt-1 text-white/80">※3月24日(火)17時よりアクセス可能</p>
+                      </a>
+                    </div>
+
+                    <div className="mb-4">
+                      <a 
+                        href="https://open.spotify.com/album/75zcHOYgdJAQvUpR2ySLQG"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-gradient-to-r from-green-600/80 to-green-500/80 hover:opacity-90 text-white font-semibold py-3 px-4 rounded-lg text-center shadow-lg"
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <Music className="w-5 h-5" />
+                          <span>Spotifyで聴く</span>
+                          <ExternalLink className="w-4 h-4" />
+                        </div>
+                      </a>
+                    </div>
+
+                    <div className="p-3 md:p-4 bg-orange-400/30 backdrop-blur-sm rounded-lg border border-white/30">
+                      <p className="text-gray-900 drop-shadow font-semibold mb-3 text-sm md:text-base">💡 応募方法</p>
+                      <div className="space-y-2">
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.spotifySteps['step1'] || false}
+                            onCheckedChange={() => toggleSpotifyStep('step1')}
+                            id="spotify-step1"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="spotify-step1" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            STEP 1: Spotifyで「Get Up And Dance」にアクセス
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.spotifySteps['step2'] || false}
+                            onCheckedChange={() => toggleSpotifyStep('step2')}
+                            id="spotify-step2"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="spotify-step2" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            STEP 2: 再生してCanvasからInstagramまたはXへシェア
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.spotifySteps['step3'] || false}
+                            onCheckedChange={() => toggleSpotifyStep('step3')}
+                            id="spotify-step3"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="spotify-step3" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            STEP 3: ハッシュタグ「#MAZZEL_GetUpAndDance」を付ける
+                          </label>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Checkbox
+                            checked={campaignChecklist.spotifySteps['step4'] || false}
+                            onCheckedChange={() => toggleSpotifyStep('step4')}
+                            id="spotify-step4"
+                            className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 mt-0.5"
+                          />
+                          <label htmlFor="spotify-step4" className="text-gray-900 text-xs md:text-sm cursor-pointer">
+                            STEP 4: シェアした投稿のスクリーンショットをエントリーフォームからアップロード
+                          </label>
+                        </div>
+                      </div>
+                      <p className="text-gray-800 text-xs mt-3">※Canvasはスマートフォンでのみ閲覧可能です</p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Schedule Section */}
-        <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
-            <h2 className="text-white drop-shadow-lg text-lg md:text-xl">スケジュール</h2>
-          </div>
-          <div className="space-y-3">{scheduleData.map(scheduleDate => (
-            <div key={scheduleDate.date} className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
-              <button
-                onClick={() => toggleScheduleDate(scheduleDate.date)}
-                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="bg-orange-500 text-white px-3 py-1 rounded-lg text-sm md:text-base font-semibold whitespace-nowrap">
-                    {scheduleDate.date}
-                  </div>
-                  <span className="text-white/90 text-sm md:text-base">({scheduleDate.dayOfWeek})</span>
-                </div>
-                {openScheduleDates[scheduleDate.date] ? 
-                  <ChevronUp className="w-5 h-5 text-white/70" /> : 
-                  <ChevronDown className="w-5 h-5 text-white/70" />
-                }
-              </button>
-              
-              {openScheduleDates[scheduleDate.date] && (
-                <div className="p-3 md:p-4 pt-0 space-y-3">
-                  {scheduleDate.events.map((event, idx) => {
-                    // イベントごとに異なる背景色を設定
-                    const bgColors = [
-                      'bg-orange-300/60',
-                      'bg-cyan-300/60',
-                      'bg-pink-300/60',
-                      'bg-yellow-300/60',
-                      'bg-purple-300/60'
-                    ];
-                    const bgColor = bgColors[idx % bgColors.length];
-                    
-                    return (
-                      <div key={idx} className={`${bgColor} backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm`}>
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="flex items-start gap-2 mb-2 flex-wrap">
-                              {event.category && (
-                                <span className="bg-blue-600 text-white px-2 py-0.5 rounded text-xs font-semibold">
-                                  [{event.category}]
-                                </span>
-                              )}
-                              {event.time && (
-                                <span className="text-gray-800 text-xs md:text-sm font-medium">{event.time}</span>
-                              )}
-                            </div>
-                            <p className="text-gray-900 font-medium text-sm md:text-base">{event.title}</p>
-                          </div>
-                          {event.url && (
-                            <a 
-                              href={event.url} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-gray-700 hover:text-gray-900 transition-colors flex-shrink-0"
-                              aria-label="Link"
-                            >
-                              <ExternalLink className="w-5 h-5" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
-          </div>
-        </div>
-
-        {/* Progress Bar */}
-        {/* <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
-          <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-            <h3 className="text-white drop-shadow-lg text-base md:text-lg">進捗状況</h3>
-            <span className="text-white drop-shadow">
-              {completedTasks} / {totalTasks}
-            </span>
-          </div>
-          <div className="w-full bg-white/30 rounded-full h-3 overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-orange-500 via-blue-500 to-red-500 transition-all duration-300"
-              style={{ width: `${(completedTasks / totalTasks) * 100}%` }}
-            />
-          </div>
-        </div> */}
-
-        {/* Download Campaign Section */}
-        <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
+        <div ref={scheduleRef} className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
           <button
-            onClick={() => setOpenDownloadCampaign(!openDownloadCampaign)}
+            onClick={() => setOpenSchedule(!openSchedule)}
             className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
           >
             <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              <h2 className="text-white drop-shadow-lg text-lg md:text-xl">ダウンロードキャンペーン</h2>
+              <Calendar className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              <h2 className="text-white drop-shadow-lg text-lg md:text-xl">スケジュール</h2>
             </div>
-            {openDownloadCampaign ? 
+            {openSchedule ? 
               <ChevronUp className="w-5 h-5 text-white/70" /> : 
               <ChevronDown className="w-5 h-5 text-white/70" />
             }
           </button>
           
-          {openDownloadCampaign && (
-            <>
-              <div className="space-y-3 md:space-y-4">
-                {services.map((service) => (
-                  <div 
-                    key={service.name}
-                    className={`border-2 border-white/30 rounded-lg p-3 md:p-5 hover:border-white/50 transition-colors bg-gradient-to-r ${service.color} bg-opacity-30 backdrop-blur-sm shadow-lg`}
-                  >
-                    <div className="flex items-start gap-2 md:gap-3">
-                      <span className="text-2xl md:text-3xl flex-shrink-0">{service.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="mb-2 md:mb-3 text-white drop-shadow text-base md:text-lg font-semibold">{service.name}</h3>
-                        
-                        <div className="space-y-2">
-                          {/* Purchase Link */}
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={purchaseChecklist[service.name]?.purchased || false}
-                              onCheckedChange={() => togglePurchase(service.name)}
-                              id={`purchase-${service.name}`}
-                              className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
-                            />
-                            <Button
-                              className={`flex-1 bg-gradient-to-r ${service.buttonColor} hover:opacity-90 text-white text-sm md:text-base h-9 md:h-10`}
-                              onClick={() => window.open(service.purchaseUrl, '_blank')}
-                            >
-                              <ShoppingCart className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 flex-shrink-0" />
-                              <span className="truncate">購入する</span>
-                              <ExternalLink className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 flex-shrink-0" />
-                            </Button>
-                          </div>
-                          
-                          {/* Campaign Link */}
-                          <div className="flex items-center gap-2">
-                            <Checkbox
-                              checked={purchaseChecklist[service.name]?.campaigned || false}
-                              onCheckedChange={() => toggleCampaign(service.name)}
-                              id={`campaign-${service.name}`}
-                              className="border-orange-400/50 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500 flex-shrink-0"
-                            />
-                            <Button
-                              variant="outline"
-                              className="flex-1 border-white/50 bg-white/20 text-white hover:bg-white/30 text-sm md:text-base h-9 md:h-10"
-                              onClick={() => window.open(service.applicationUrl, '_blank')}
-                            >
-                              <Gift className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2 flex-shrink-0" />
-                              <span className="truncate">キャンペーン応募</span>
-                              <ExternalLink className="w-3 h-3 md:w-4 md:h-4 ml-1 md:ml-2 flex-shrink-0" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+          {openSchedule && (
+            <div className="space-y-3">{scheduleData.map(scheduleDate => (
+              <div key={scheduleDate.date} className="bg-white/10 backdrop-blur-sm rounded-lg border border-white/30 overflow-hidden">
+                <button
+                  onClick={() => toggleScheduleDate(scheduleDate.date)}
+                  className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`${getDayColor(scheduleDate.dayOfWeek)} text-white px-3 py-1 rounded-lg text-sm md:text-base font-semibold whitespace-nowrap`}>
+                      {scheduleDate.date}
                     </div>
+                    <span className="text-white/90 text-sm md:text-base">({scheduleDate.dayOfWeek})</span>
                   </div>
-                ))}
+                </button>
+                
+                {openScheduleDates[scheduleDate.date] && (
+                  <div className="p-3 md:p-4 pt-0 space-y-3">
+                    {scheduleDate.events.map((event, idx) => {
+                      const bgColors = [
+                        'bg-orange-300/60',
+                        'bg-cyan-300/60',
+                        'bg-pink-300/60',
+                        'bg-yellow-300/60',
+                        'bg-purple-300/60'
+                      ];
+                      const bgColor = bgColors[idx % bgColors.length];
+                      
+                      return (
+                        <div key={idx} className={bgColor + ' backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30 shadow-sm'}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <div className="flex items-start gap-2 mb-2 flex-wrap">
+                                {event.category && (
+                                  <span className={getCategoryColor(event.category) + ' text-white px-2 py-0.5 rounded text-xs font-semibold'}>
+                                    {event.category}
+                                  </span>
+                                )}
+                                {event.time && (
+                                  <span className="text-gray-800 text-xs md:text-sm font-medium">{event.time}</span>
+                                )}
+                              </div>
+                              <p className="text-gray-900 font-medium text-sm md:text-base">{event.title}</p>
+                            </div>
+                            {event.url && (
+                              <a 
+                                href={event.url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-gray-700 hover:text-gray-900 transition-colors flex-shrink-0"
+                                aria-label="Link"
+                              >
+                                <ExternalLink className="w-5 h-5" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-              
-              <div className="mt-4 md:mt-6 p-3 md:p-4 bg-orange-500/20 backdrop-blur-sm rounded-lg border border-orange-400/30">
-                <p className="text-white drop-shadow font-semibold mb-2 text-sm md:text-base">💡 応援のポイント</p>
-                <ul className="text-white/90 text-xs md:text-sm space-y-1">
-                  <li>• 複数のサービスで購入すると各チャートに貢献できます</li>
-                  <li>• キャンペーン応募も忘れずに！</li>
-                  <li>• 購入後はSNSでシェアしよう</li>
-                </ul>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Banquet Album Info Section */}
-        <div className="bg-white/20 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl mb-6">
-          <button
-            onClick={() => setOpenBanquetInfo(!openBanquetInfo)}
-            className="w-full flex items-center justify-between mb-4 hover:opacity-80 transition-opacity"
-          >
-            <div className="flex items-center gap-2">
-              <Music className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              <h2 className="text-white drop-shadow-lg text-lg md:text-xl">2nd Album「Banquet」情報</h2>
-            </div>
-            {openBanquetInfo ? 
-              <ChevronUp className="w-5 h-5 text-white/70" /> : 
-              <ChevronDown className="w-5 h-5 text-white/70" />
-            }
-          </button>
-          
-          {openBanquetInfo && (
-            <div className="space-y-4">
-              {/* Calendar Image */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                <h3 className="text-white drop-shadow font-semibold mb-3 text-sm md:text-base">📅 リリーススケジュール</h3>
-                <img 
-                  src={banquetCalendar} 
-                  alt="Banquet リリーススケジュール" 
-                  className="w-full rounded-lg shadow-lg"
-                />
-              </div>
-
-              {/* Album Details Image */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                <h3 className="text-white drop-shadow font-semibold mb-3 text-sm md:text-base">💿 商品詳細</h3>
-                <img 
-                  src={banquetInfo} 
-                  alt="Banquet 商品詳細" 
-                  className="w-full rounded-lg shadow-lg"
-                />
-              </div>
-
-              {/* Serial Number Benefits Image */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-white/30">
-                <h3 className="text-white drop-shadow font-semibold mb-3 text-sm md:text-base">🎁 シリアルナンバー特典</h3>
-                <img 
-                  src={banquetSerial} 
-                  alt="Banquet シリアルナンバー特典" 
-                  className="w-full rounded-lg shadow-lg"
-                />
-              </div>
-
-              {/* Note */}
-              <div className="p-3 md:p-4 bg-purple-500/20 backdrop-blur-sm rounded-lg border border-purple-400/30">
-                <p className="text-white drop-shadow text-xs md:text-sm">
-                  <strong>📢 発売日：</strong>2026年4月8日（水）<br />
-                  アルバム「Banquet」の応援もよろしくお願いします！
-                </p>
-              </div>
-            </div>
+            ))}</div>
           )}
         </div>
 
         {/* Footer Note */}
         <div className="mt-4 md:mt-6 text-center text-white drop-shadow text-sm md:text-base">
-          <p>※ これは非公式のファンサポートサイトです</p>
+          <p>※ これは非公式サイトです</p>
           <p className="mt-1">キャンペーンの詳細は各サイトでご確認ください</p>
         </div>
       </div>
