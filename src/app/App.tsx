@@ -853,7 +853,7 @@ export default function App() {
                     </div>
 
                     <div className="mb-4 p-3 md:p-4 bg-purple-400/30 backdrop-blur-sm rounded-lg border border-white/30">
-                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">📅 応募��間</p>
+                      <p className="text-gray-900 drop-shadow font-semibold mb-2 text-sm md:text-base">📅 応募期間</p>
                       <p className="text-black text-xs md:text-sm font-semibold">
                         2026年3月23日(月) 12:00 ～ 3月30日(月) 18:00
                       </p>
