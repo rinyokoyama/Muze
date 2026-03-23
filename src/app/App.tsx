@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CheckCircle2, Circle, Music, Calendar, ExternalLink, Gift, ShoppingCart, Instagram, Youtube, ChevronDown, ChevronUp, Trophy, Video, Share2, Menu, X } from 'lucide-react';
-import backgroundImage from './assets/201ec8a744c7965c9c4ec55aa5afc1407deb78dd.jpg';
+import backgroundImage from '../assets/201ec8a744c7965c9c4ec55aa5afc1407deb78dd.jpg';
 import { Button } from './components/ui/button';
 import { Checkbox } from './components/ui/checkbox';
 
